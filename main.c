@@ -11,9 +11,6 @@ int main() {
     Biblioteca biblioteca;
     inicializarBiblioteca(&biblioteca);
     carregarDados(&biblioteca);
-    
-    MetricasTempo metricas;
-    iniciarMedicaoTempo(&metricas);
 
     int opcao;
     do {
@@ -30,7 +27,6 @@ int main() {
         printf("10. Emprestar livro\n");
         printf("11. Devolver livro\n");
         printf("12. Salvar dados\n");
-        printf("13. Ver metricas de tempo\n");
         printf("0. Sair\n");
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
@@ -38,88 +34,61 @@ int main() {
 
         switch (opcao) {
             case 1: {
-                Livro livro;
+                int codigo, quantidade;
+                char titulo[MAX_TITULO], autor[MAX_AUTOR], tema[MAX_TEMA];
                 printf("Codigo: ");
-                scanf("%d", &livro.codigo);
-                limparBuffer();
+                scanf("%d", &codigo);
                 printf("Titulo: ");
-                fgets(livro.titulo, MAX_TITULO, stdin);
-                livro.titulo[strcspn(livro.titulo, "\n")] = 0;
+                scanf(" %[^\n]", titulo);
                 printf("Autor: ");
-                fgets(livro.autor, MAX_AUTOR, stdin);
-                livro.autor[strcspn(livro.autor, "\n")] = 0;
+                scanf(" %[^\n]", autor);
                 printf("Tema: ");
-                fgets(livro.tema, MAX_TEMA, stdin);
-                livro.tema[strcspn(livro.tema, "\n")] = 0;
+                scanf(" %[^\n]", tema);
                 printf("Quantidade: ");
-                scanf("%d", &livro.quantidade);
-                limparBuffer();
-
-                if (inserirLivro(&biblioteca, livro)) {
-                    printf("Livro inserido com sucesso!\n");
-                } else {
-                    printf("Erro ao inserir livro. Biblioteca cheia.\n");
-                }
+                scanf("%d", &quantidade);
+                inserirLivroBiblioteca(&biblioteca, codigo, titulo, autor, tema, quantidade);
                 break;
             }
             case 2: {
-                int codigo;
-                printf("Codigo do livro a remover: ");
+                int codigo, quantidade;
+                printf("Codigo do livro: ");
                 scanf("%d", &codigo);
-                limparBuffer();
-
-                if (removerLivro(&biblioteca, codigo)) {
-                    printf("Livro removido com sucesso!\n");
-                } else {
-                    printf("Erro ao remover livro. Livro nao encontrado ou possui exemplares emprestados.\n");
-                }
+                printf("Quantidade a remover: ");
+                scanf("%d", &quantidade);
+                removerLivroBiblioteca(&biblioteca, codigo, quantidade);
                 break;
             }
             case 3: {
                 int codigo;
-                printf("Codigo do livro a buscar: ");
+                printf("Codigo do livro: ");
                 scanf("%d", &codigo);
-                limparBuffer();
-
-                Livro* livro = buscarPorCodigo(&biblioteca, codigo);
+                Livro *livro = buscarPorCodigo(&biblioteca, codigo);
                 if (livro) {
-                    printf("\nLivro encontrado:\n");
-                    printf("Codigo: %d\n", livro->codigo);
+                    printf("Livro encontrado:\n");
                     printf("Titulo: %s\n", livro->titulo);
                     printf("Autor: %s\n", livro->autor);
                     printf("Tema: %s\n", livro->tema);
                     printf("Quantidade: %d\n", livro->quantidade);
                     printf("Emprestados: %d\n", livro->emprestados);
-                    printf("Total de emprestimos: %d\n", livro->total_emprestimos);
                 } else {
-                    printf("Livro nao encontrado.\n");
+                    printf("Livro nao encontrado!\n");
                 }
                 break;
             }
             case 4: {
                 char tema[MAX_TEMA];
-                printf("Tema a buscar: ");
-                fgets(tema, MAX_TEMA, stdin);
-                tema[strcspn(tema, "\n")] = 0;
-
+                printf("Tema: ");
+                scanf(" %[^\n]", tema);
                 Livro resultados[MAX_LIVROS];
                 int quantidade;
                 buscarPorTema(&biblioteca, tema, resultados, &quantidade);
-
                 if (quantidade > 0) {
-                    printf("\nLivros encontrados:\n");
+                    printf("Livros encontrados:\n");
                     for (int i = 0; i < quantidade; i++) {
-                        printf("Codigo: %d\n", resultados[i].codigo);
-                        printf("Titulo: %s\n", resultados[i].titulo);
-                        printf("Autor: %s\n", resultados[i].autor);
-                        printf("Tema: %s\n", resultados[i].tema);
-                        printf("Quantidade: %d\n", resultados[i].quantidade);
-                        printf("Emprestados: %d\n", resultados[i].emprestados);
-                        printf("Total de emprestimos: %d\n", resultados[i].total_emprestimos);
-                        printf("-------------------\n");
+                        printf("%d. %s - %s\n", i + 1, resultados[i].titulo, resultados[i].autor);
                     }
                 } else {
-                    printf("Nenhum livro encontrado com este tema.\n");
+                    printf("Nenhum livro encontrado com este tema!\n");
                 }
                 break;
             }
@@ -128,7 +97,7 @@ int main() {
                 break;
             case 6:
                 ordenarPorTitulo(&biblioteca);
-                printf("Livros ordenados por titulo.\n");
+                printf("Livros ordenados por titulo!\n");
                 break;
             case 7:
                 quantidadePorTema(&biblioteca);
@@ -141,41 +110,29 @@ int main() {
                 break;
             case 10: {
                 int codigo;
-                printf("Codigo do livro a emprestar: ");
+                printf("Codigo do livro: ");
                 scanf("%d", &codigo);
-                limparBuffer();
-
-                int resultado = emprestarLivro(&biblioteca, codigo);
-                if (resultado == 1) {
+                if (emprestarLivro(&biblioteca, codigo)) {
                     printf("Livro emprestado com sucesso!\n");
-                } else if (resultado == -1) {
-                    printf("Todos os exemplares deste livro ja estao emprestados.\n");
                 } else {
-                    printf("Livro nao encontrado.\n");
+                    printf("Nao foi possivel emprestar o livro!\n");
                 }
                 break;
             }
             case 11: {
                 int codigo;
-                printf("Codigo do livro a devolver: ");
+                printf("Codigo do livro: ");
                 scanf("%d", &codigo);
-                limparBuffer();
-
-                int resultado = devolverLivro(&biblioteca, codigo);
-                if (resultado == 1) {
+                if (devolverLivro(&biblioteca, codigo)) {
                     printf("Livro devolvido com sucesso!\n");
-                } else if (resultado == -1) {
-                    printf("Nao ha exemplares deste livro emprestados.\n");
                 } else {
-                    printf("Livro nao encontrado.\n");
+                    printf("Nao foi possivel devolver o livro!\n");
                 }
                 break;
             }
             case 12:
                 salvarDados(&biblioteca);
-                break;
-            case 13:
-                imprimirMetricasTempo(&metricas);
+                printf("Dados salvos com sucesso!\n");
                 break;
             case 0:
                 salvarDados(&biblioteca);

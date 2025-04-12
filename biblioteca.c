@@ -1,121 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "biblioteca.h"
 
 static Biblioteca biblioteca;
-
-// Funções de medição de tempo
-void iniciarMedicaoTempo(MetricasTempo *metricas) {
-    metricas->tempo_insercao = 0.0;
-    metricas->tempo_busca = 0.0;
-    metricas->tempo_remocao = 0.0;
-    metricas->tempo_ordenacao = 0.0;
-}
-
-void registrarTempoInsercao(MetricasTempo *metricas, double tempo) {
-    metricas->tempo_insercao = tempo;
-}
-
-void registrarTempoBusca(MetricasTempo *metricas, double tempo) {
-    metricas->tempo_busca = tempo;
-}
-
-void registrarTempoRemocao(MetricasTempo *metricas, double tempo) {
-    metricas->tempo_remocao = tempo;
-}
-
-void registrarTempoOrdenacao(MetricasTempo *metricas, double tempo) {
-    metricas->tempo_ordenacao = tempo;
-}
-
-void imprimirMetricasTempo(MetricasTempo *metricas) {
-    printf("\n=== Metricas de Tempo ===\n");
-    printf("Tempo medio de insercao: %.6f segundos\n", metricas->tempo_insercao);
-    printf("Tempo medio de busca: %.6f segundos\n", metricas->tempo_busca);
-    printf("Tempo medio de remocao: %.6f segundos\n", metricas->tempo_remocao);
-    printf("Tempo medio de ordenacao: %.6f segundos\n", metricas->tempo_ordenacao);
-}
 
 void inicializarBiblioteca(Biblioteca *b) {
     b->total = 0;
 }
 
-int inserirLivro(Biblioteca *b, Livro livro) {
-    clock_t inicio = clock();
-    
+void inserirLivroBiblioteca(Biblioteca *b, int codigo, const char *titulo, const char *autor, const char *tema, int quantidade) {
     if (b->total >= MAX_LIVROS) {
-        return 0;
+        printf("Biblioteca cheia!\n");
+        return;
     }
-    
+
     // Verifica se o livro já existe
     for (int i = 0; i < b->total; i++) {
-        if (b->livros[i].codigo == livro.codigo) {
-            b->livros[i].quantidade += livro.quantidade;
-            return 1;
+        if (b->livros[i].codigo == codigo) {
+            b->livros[i].quantidade += quantidade;
+            return;
         }
     }
-    
-    // Se não existe, adiciona novo
-    b->livros[b->total] = livro;
-    b->livros[b->total].emprestados = 0;
-    b->livros[b->total].total_emprestimos = 0;
+
+    // Insere novo livro
+    Livro *novo = &b->livros[b->total];
+    novo->codigo = codigo;
+    strncpy(novo->titulo, titulo, MAX_TITULO - 1);
+    strncpy(novo->autor, autor, MAX_AUTOR - 1);
+    strncpy(novo->tema, tema, MAX_TEMA - 1);
+    novo->quantidade = quantidade;
+    novo->emprestados = 0;
+    novo->total_emprestimos = 0;
     b->total++;
-    
-    clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    registrarTempoInsercao(&b->metricas, tempo);
-    
-    return 1;
 }
 
-int removerLivro(Biblioteca *b, int codigo) {
-    clock_t inicio = clock();
-    
+void removerLivroBiblioteca(Biblioteca *b, int codigo, int quantidade) {
     for (int i = 0; i < b->total; i++) {
         if (b->livros[i].codigo == codigo) {
-            if (b->livros[i].emprestados > 0) {
-                return 0; // Não pode remover se houver exemplares emprestados
+            if (b->livros[i].quantidade >= quantidade) {
+                b->livros[i].quantidade -= quantidade;
+                if (b->livros[i].quantidade == 0) {
+                    // Remove o livro se não houver mais cópias
+                    for (int j = i; j < b->total - 1; j++) {
+                        b->livros[j] = b->livros[j + 1];
+                    }
+                    b->total--;
+                }
+            } else {
+                printf("Quantidade insuficiente de exemplares!\n");
             }
-            
-            // Move todos os livros após este uma posição para trás
-            for (int j = i; j < b->total - 1; j++) {
-                b->livros[j] = b->livros[j + 1];
-            }
-            b->total--;
-            
-            clock_t fim = clock();
-            double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-            registrarTempoRemocao(&b->metricas, tempo);
-            
-            return 1;
+            return;
         }
     }
-    
-    clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    registrarTempoRemocao(&b->metricas, tempo);
-    
-    return 0;
+    printf("Livro nao encontrado!\n");
 }
 
 Livro* buscarPorCodigo(Biblioteca *b, int codigo) {
-    clock_t inicio = clock();
-    
     for (int i = 0; i < b->total; i++) {
         if (b->livros[i].codigo == codigo) {
-            clock_t fim = clock();
-            double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-            registrarTempoBusca(&b->metricas, tempo);
             return &b->livros[i];
         }
     }
-    
-    clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    registrarTempoBusca(&b->metricas, tempo);
-    
     return NULL;
 }
 
@@ -228,8 +174,6 @@ void listarLivros(Biblioteca *b) {
 }
 
 void ordenarPorTitulo(Biblioteca *b) {
-    clock_t inicio = clock();
-    
     for (int i = 0; i < b->total - 1; i++) {
         for (int j = 0; j < b->total - i - 1; j++) {
             if (strcmp(b->livros[j].titulo, b->livros[j + 1].titulo) > 0) {
@@ -239,10 +183,6 @@ void ordenarPorTitulo(Biblioteca *b) {
             }
         }
     }
-    
-    clock_t fim = clock();
-    double tempo = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    registrarTempoOrdenacao(&b->metricas, tempo);
 }
 
 void quantidadePorTema(Biblioteca *b) {
