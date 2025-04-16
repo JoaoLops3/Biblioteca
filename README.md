@@ -11,6 +11,7 @@ O projeto é composto pelos seguintes arquivos:
 - `main.c`: Contém o programa principal com a interface de usuário
 - `biblioteca.dat`: Arquivo de dados para persistência das informações
 
+<<<<<<< HEAD
 ## Implementação com Lista Estática
 
 O sistema foi implementado utilizando uma lista estática, que é uma estrutura de dados linear onde os elementos são armazenados em um array de tamanho fixo. Esta escolha oferece:
@@ -22,6 +23,8 @@ O sistema foi implementado utilizando uma lista estática, que é uma estrutura 
 
 A lista estática é implementada através da estrutura `Biblioteca`, que contém um array de `Livro` com tamanho máximo definido por `MAX_LIVROS`. As operações de inserção, remoção e busca são realizadas mantendo a ordem dos elementos no array.
 
+=======
+>>>>>>> 50af47fa6e84f59a63771c65e5cc01dd11c77d63
 ## Funcionalidades
 
 O sistema oferece as seguintes funcionalidades:
